@@ -16,7 +16,7 @@ class RepositorioAutenticacion {
         'email': email,
         'rol': 'cliente', // por defecto se registra como cliente
       });
-      return null; // sin error
+      return null;
     } on FirebaseAuthException catch (e) {
       return e.message;
     }
@@ -29,5 +29,9 @@ class RepositorioAutenticacion {
     } on FirebaseAuthException catch (e) {
       return e.message;
     }
+  }
+
+  Future<void> enviarRecuperoContrasena(String email) async {
+    await _autenticacion.sendPasswordResetEmail(email: email);
   }
 }
