@@ -56,7 +56,7 @@ class _PantallaRegistroState extends State<PantallaRegistro> {
     }
   }
 
-  // Label arriba del campo, como en el Figma (no label flotante adentro).
+  
   Widget _etiqueta(String texto) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
