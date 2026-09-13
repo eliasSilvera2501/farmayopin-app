@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "699457902383",
+    "project_id": "farmayopin-laboratorio",
+    "storage_bucket": "farmayopin-laboratorio.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:699457902383:android:0367955ac9b24ba306f3da",
+        "android_client_info": {
+          "package_name": "com.example.farmayopin_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "699457902383-c60bvnasljrj715rf6tjo0eqg5iqk46j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVgjKlpj5tDzkjGqp0CoDEKa0lEYIXPmI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "699457902383-c60bvnasljrj715rf6tjo0eqg5iqk46j.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "699457902383-m2t6pv5i7s87m1av4dun2gak4vfdfg4u.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.farmayopinApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
