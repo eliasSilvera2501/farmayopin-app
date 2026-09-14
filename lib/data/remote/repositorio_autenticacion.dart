@@ -34,4 +34,20 @@ class RepositorioAutenticacion {
   Future<void> enviarRecuperoContrasena(String email) async {
     await _autenticacion.sendPasswordResetEmail(email: email);
   }
+
+  Future<void> cerrarSesion() async {
+    await _autenticacion.signOut();
+  }
+
+  // Lee el rol ('admin' o 'cliente') del usuario que acaba de iniciar sesion.
+  // Devuelve null si por algun motivo no hay usuario logueado o no tiene documento en Firestore.
+  Future<String?> obtenerRolUsuarioActual() async {
+    final uid = _autenticacion.currentUser?.uid;
+    if (uid == null) return null;
+
+    final doc = await _baseDatos.collection('usuarios').doc(uid).get();
+    if (!doc.exists) return null;
+
+    return doc.data()?['rol'] as String?;
+  }
 }

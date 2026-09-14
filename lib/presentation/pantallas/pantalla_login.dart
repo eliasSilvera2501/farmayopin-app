@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/remote/repositorio_autenticacion.dart';
 import 'pantalla_registro.dart';
 import 'cliente/pantalla_catalogo.dart';
+import 'admin/pantalla_admin_temporal.dart';
 
 const Color colorPrimario = Color(0xFF4F46E5);
 
@@ -21,21 +22,40 @@ class _PantallaLoginState extends State<PantallaLogin> {
   bool _verContrasena = false;
 
   Future<void> _iniciarSesion() async {
-    setState(() => _cargando = true);
+    setState(() {
+      _cargando = true;
+      _error = null;
+    });
+
     final error = await _repositorioAutenticacion.iniciarSesion(
       _controladorEmail.text.trim(),
       _controladorContrasena.text.trim(),
     );
-    setState(() {
-      _error = error;
-      _cargando = false;
-    });
-        if (error == null) {
-          if (!mounted) return;
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const PantallaCatalogo()),
-          );
-        }
+
+    if (error != null) {
+      setState(() {
+        _error = error;
+        _cargando = false;
+      });
+      return;
+    }
+
+    // Login OK: ahora vemos el rol para saber a donde navegar.
+    final rol = await _repositorioAutenticacion.obtenerRolUsuarioActual();
+
+    setState(() => _cargando = false);
+    if (!mounted) return;
+
+    if (rol == 'admin') {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const PantallaAdminTemporal()),
+      );
+    } else {
+      // 'cliente' o cualquier otro caso (ej: rol no encontrado) cae en Cliente por defecto.
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const PantallaCatalogo()),
+      );
+    }
   }
 
   Future<void> _recuperarContrasena() async {
