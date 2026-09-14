@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/remote/repositorio_autenticacion.dart';
 import 'pantalla_registro.dart';
+import 'cliente/pantalla_catalogo.dart';
 
 const Color colorPrimario = Color(0xFF4F46E5);
 
@@ -29,11 +30,12 @@ class _PantallaLoginState extends State<PantallaLogin> {
       _error = error;
       _cargando = false;
     });
-    if (error == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login exitoso ✅')),
-      );
-    }
+        if (error == null) {
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const PantallaCatalogo()),
+          );
+        }
   }
 
   Future<void> _recuperarContrasena() async {

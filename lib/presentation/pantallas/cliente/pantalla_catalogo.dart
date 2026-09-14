@@ -1,0 +1,320 @@
+import 'package:flutter/material.dart';
+import '../../../data/remote/repositorio_productos.dart';
+import '../../../domain/models/producto.dart';
+
+const Color colorPrimario = Color(0xFF4F46E5);
+
+class PantallaCatalogo extends StatefulWidget {
+  const PantallaCatalogo({super.key});
+
+  @override
+  State<PantallaCatalogo> createState() => _PantallaCatalogoState();
+}
+
+class _PantallaCatalogoState extends State<PantallaCatalogo> {
+  final _repositorioProductos = RepositorioProductos();
+  int _pestanaActual = 0;
+
+  void _pestanaAunNoDisponible(String nombre) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$nombre: próximamente')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Encabezado: logo + titulo + buscar
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: colorPrimario,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.medical_services_outlined, color: Colors.white, size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    'Productos',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black87),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.search, color: Colors.black54),
+                    onPressed: () => _pestanaAunNoDisponible('Buscar'),
+                  ),
+                ],
+              ),
+            ),
+
+            // Fila de filtro: "Todo el Inventario" + cantidad + boton Filtro
+            StreamBuilder<List<Producto>>(
+              stream: _repositorioProductos.obtenerProductos(),
+              builder: (context, snapshot) {
+                final cantidad = snapshot.data?.length ?? 0;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            const Text(
+                              'Todo el Inventario',
+                              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.expand_more, size: 18, color: Colors.black54),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        '$cantidad artículos',
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      ),
+                      const SizedBox(width: 10),
+                      OutlinedButton.icon(
+                        onPressed: () => _pestanaAunNoDisponible('Filtro'),
+                        icon: const Icon(Icons.tune, size: 16),
+                        label: const Text('Filtros', style: TextStyle(fontSize: 12)),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.black87,
+                          side: BorderSide(color: Colors.grey.shade300),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+
+            const SizedBox(height: 4),
+
+            // Lista de productos
+            Expanded(
+              child: StreamBuilder<List<Producto>>(
+                stream: _repositorioProductos.obtenerProductos(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error al cargar productos: ${snapshot.error}'));
+                  }
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final productos = snapshot.data!;
+                  if (productos.isEmpty) {
+                    return const Center(child: Text('No hay productos cargados todavía'));
+                  }
+
+                  return ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                    itemCount: productos.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) => _FilaProducto(producto: productos[index]),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: _BarraNavegacionInferior(
+        indiceActual: _pestanaActual,
+        onTocar: (indice) {
+          if (indice == 0) {
+            setState(() => _pestanaActual = indice);
+            return;
+          }
+          const nombres = ['Inicio', 'Carrito', 'Historial', 'Perfil'];
+          _pestanaAunNoDisponible(nombres[indice]);
+        },
+      ),
+    );
+  }
+}
+
+class _BarraNavegacionInferior extends StatelessWidget {
+  final int indiceActual;
+  final void Function(int) onTocar;
+
+  const _BarraNavegacionInferior({required this.indiceActual, required this.onTocar});
+
+  static const _items = [
+    (Icons.home_outlined, 'Inicio'),
+    (Icons.shopping_cart_outlined, 'Carrito'),
+    (Icons.receipt_long_outlined, 'Historial'),
+    (Icons.person_outline, 'Perfil'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Colors.grey.shade200)),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: List.generate(_items.length, (indice) {
+            final seleccionado = indice == indiceActual;
+            final color = seleccionado ? colorPrimario : Colors.grey;
+            return InkWell(
+              onTap: () => onTocar(indice),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(_items[indice].$1, color: color, size: 24),
+                  const SizedBox(height: 2),
+                  Text(
+                    _items[indice].$2,
+                    style: TextStyle(color: color, fontSize: 11, fontWeight: seleccionado ? FontWeight.w600 : FontWeight.normal),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ),
+      ),
+    );
+  }
+}
+
+class _FilaProducto extends StatelessWidget {
+  final Producto producto;
+
+  const _FilaProducto({required this.producto});
+
+  @override
+  Widget build(BuildContext context) {
+    final sinStock = producto.stock <= 0;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 56,
+              height: 56,
+              child: producto.fotoUrl.isNotEmpty
+                  ? Image.network(
+                      producto.fotoUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => _iconoPlaceholder(),
+                    )
+                  : _iconoPlaceholder(),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  producto.nombre,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  producto.descripcion,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      'SKU: ${producto.sku}',
+                      style: TextStyle(fontSize: 11, color: Colors.grey.shade500),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: sinStock ? Colors.red : Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      sinStock ? 'Sin Stock' : 'En Stock',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: sinStock ? Colors.red : Colors.green.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '\$${producto.precio.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: colorPrimario),
+              ),
+              const SizedBox(height: 8),
+              InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: sinStock
+                    ? null
+                    : () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Carrito: próximamente')),
+                        );
+                      },
+                child: Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: sinStock ? Colors.grey.shade300 : colorPrimario,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.add, color: Colors.white, size: 18),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconoPlaceholder() {
+    return Container(
+      color: Colors.grey.shade200,
+      child: const Center(
+        child: Icon(Icons.medication_outlined, color: Colors.grey, size: 24),
+      ),
+    );
+  }
+}

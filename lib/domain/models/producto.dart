@@ -5,6 +5,7 @@ class Producto {
   final double precio;
   final int stock;
   final String fotoUrl;
+  final String sku;
 
   Producto({
     required this.id,
@@ -13,6 +14,7 @@ class Producto {
     required this.precio,
     required this.stock,
     required this.fotoUrl,
+    required this.sku,
   });
 
   Map<String, dynamic> toMap() {
@@ -22,6 +24,7 @@ class Producto {
       'precio': precio,
       'stock': stock,
       'fotoUrl': fotoUrl,
+      'sku': sku,
     };
   }
 
@@ -33,6 +36,7 @@ class Producto {
       precio: (map['precio'] ?? 0).toDouble(),
       stock: map['stock'] ?? 0,
       fotoUrl: map['fotoUrl'] ?? '',
+      sku: map['sku'] ?? '',
     );
   }
 }
