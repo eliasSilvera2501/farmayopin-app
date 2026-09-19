@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../data/remote/repositorio_autenticacion.dart';
 import 'pantalla_registro.dart';
 import 'cliente/pantalla_catalogo.dart';
-import 'admin/pantalla_admin_temporal.dart';
+import 'admin/pantalla_listar_productos.dart';
 
 const Color colorPrimario = Color(0xFF4F46E5);
 
@@ -48,7 +48,7 @@ class _PantallaLoginState extends State<PantallaLogin> {
 
     if (rol == 'admin') {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const PantallaAdminTemporal()),
+        MaterialPageRoute(builder: (context) => const PantallaListarProductos()),
       );
     } else {
       // 'cliente' o cualquier otro caso (ej: rol no encontrado) cae en Cliente por defecto.
