@@ -14,7 +14,7 @@ class RepositorioAutenticacion {
       await _baseDatos.collection('usuarios').doc(credencial.user!.uid).set({
         'nombre': nombre,
         'email': email,
-        'rol': 'cliente', // por defecto se registra como cliente
+        'rol': 'cliente',
       });
       return null;
     } on FirebaseAuthException catch (e) {
@@ -39,8 +39,6 @@ class RepositorioAutenticacion {
     await _autenticacion.signOut();
   }
 
-  // Lee el rol ('admin' o 'cliente') del usuario que acaba de iniciar sesion.
-  // Devuelve null si por algun motivo no hay usuario logueado o no tiene documento en Firestore.
   Future<String?> obtenerRolUsuarioActual() async {
     final uid = _autenticacion.currentUser?.uid;
     if (uid == null) return null;

@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../../data/remote/repositorio_productos.dart';
+import '../../../data/remote/repositorio_autenticacion.dart';
 import '../../../domain/models/producto.dart';
+import '../../../domain/models/carrito.dart';
+import '../pantalla_login.dart';
+import 'pantalla_detalle_producto.dart';
+import 'pantalla_carrito.dart';
+import '../../widgets/barra_navegacion_inferior.dart';
+import '../../../data/remote/repositorio_carrito.dart';
+import 'pantalla_mis_compras.dart';
 
 const Color colorPrimario = Color(0xFF4F46E5);
 
@@ -13,11 +21,47 @@ class PantallaCatalogo extends StatefulWidget {
 
 class _PantallaCatalogoState extends State<PantallaCatalogo> {
   final _repositorioProductos = RepositorioProductos();
+  final _repositorioAutenticacion = RepositorioAutenticacion();
+  final _repositorioCarrito = RepositorioCarrito();
   int _pestanaActual = 0;
 
   void _pestanaAunNoDisponible(String nombre) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$nombre: próximamente')),
+    );
+  }
+
+  void _mostrarMenuPerfil() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.logout, color: Colors.red),
+                  title: const Text('Cerrar sesión', style: TextStyle(color: Colors.red)),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await _repositorioAutenticacion.cerrarSesion();
+                    if (!mounted) return;
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const PantallaLogin()),
+                      (route) => false,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -28,7 +72,7 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
       body: SafeArea(
         child: Column(
           children: [
-            // Encabezado: logo + titulo + buscar
+
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: Row(
@@ -56,7 +100,6 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
               ),
             ),
 
-            // Fila de filtro: "Todo el Inventario" + cantidad + boton Filtro
             StreamBuilder<List<Producto>>(
               stream: _repositorioProductos.obtenerProductos(),
               builder: (context, snapshot) {
@@ -101,7 +144,6 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
 
             const SizedBox(height: 4),
 
-            // Lista de productos
             Expanded(
               child: StreamBuilder<List<Producto>>(
                 stream: _repositorioProductos.obtenerProductos(),
@@ -122,7 +164,7 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                     itemCount: productos.length,
                     separatorBuilder: (context, index) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) => _FilaProducto(producto: productos[index]),
+                    itemBuilder: (context, index) => _FilaProducto(producto: productos[index], repositorioCarrito: _repositorioCarrito),
                   );
                 },
               ),
@@ -130,87 +172,65 @@ class _PantallaCatalogoState extends State<PantallaCatalogo> {
           ],
         ),
       ),
-      bottomNavigationBar: _BarraNavegacionInferior(
-        indiceActual: _pestanaActual,
-        onTocar: (indice) {
-          if (indice == 0) {
-            setState(() => _pestanaActual = indice);
-            return;
-          }
-          const nombres = ['Inicio', 'Carrito', 'Historial', 'Perfil'];
-          _pestanaAunNoDisponible(nombres[indice]);
+      bottomNavigationBar: StreamBuilder<Carrito>(
+        stream: _repositorioCarrito.obtenerCarrito(),
+        builder: (context, snapshot) {
+          final cantidad = snapshot.data?.items.fold<int>(0, (suma, item) => suma + item.cantidad) ?? 0;
+          return BarraNavegacionInferior(
+            indiceActual: _pestanaActual,
+            insigniaCarrito: cantidad > 0 ? cantidad : null,
+            onTocar: (indice) {
+              if (indice == 0) {
+                setState(() => _pestanaActual = indice);
+                return;
+              }
+              if (indice == 3) {
+                _mostrarMenuPerfil();
+                return;
+              }
+              if (indice == 1) {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const PantallaCarrito()));
+                return;
+              }
+              if (indice == 2) {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const PantallaMisCompras()));
+                return;
+              }
+              const nombres = ['Inicio', 'Carrito', 'Historial', 'Perfil'];
+              _pestanaAunNoDisponible(nombres[indice]);
+            },
+          );
         },
       ),
     );
   }
 }
-
-class _BarraNavegacionInferior extends StatelessWidget {
-  final int indiceActual;
-  final void Function(int) onTocar;
-
-  const _BarraNavegacionInferior({required this.indiceActual, required this.onTocar});
-
-  static const _items = [
-    (Icons.home_outlined, 'Inicio'),
-    (Icons.shopping_cart_outlined, 'Carrito'),
-    (Icons.receipt_long_outlined, 'Historial'),
-    (Icons.person_outline, 'Perfil'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade200)),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: List.generate(_items.length, (indice) {
-            final seleccionado = indice == indiceActual;
-            final color = seleccionado ? colorPrimario : Colors.grey;
-            return InkWell(
-              onTap: () => onTocar(indice),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(_items[indice].$1, color: color, size: 24),
-                  const SizedBox(height: 2),
-                  Text(
-                    _items[indice].$2,
-                    style: TextStyle(color: color, fontSize: 11, fontWeight: seleccionado ? FontWeight.w600 : FontWeight.normal),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ),
-      ),
-    );
-  }
-}
-
 class _FilaProducto extends StatelessWidget {
   final Producto producto;
+  final RepositorioCarrito repositorioCarrito;
 
-  const _FilaProducto({required this.producto});
+  const _FilaProducto({required this.producto, required this.repositorioCarrito});
 
   @override
   Widget build(BuildContext context) {
     final sinStock = producto.stock <= 0;
 
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => PantallaDetalleProducto(producto: producto)),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
@@ -288,8 +308,9 @@ class _FilaProducto extends StatelessWidget {
                 onTap: sinStock
                     ? null
                     : () {
+                        repositorioCarrito.agregarProducto(producto.id, 1);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Carrito: próximamente')),
+                          SnackBar(content: Text('${producto.nombre} agregado al carrito')),
                         );
                       },
                 child: Container(
@@ -305,6 +326,7 @@ class _FilaProducto extends StatelessWidget {
             ],
           ),
         ],
+        ),
       ),
     );
   }

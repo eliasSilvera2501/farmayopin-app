@@ -56,7 +56,6 @@ class _PantallaRegistroState extends State<PantallaRegistro> {
     }
   }
 
-  
   Widget _etiqueta(String texto) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),

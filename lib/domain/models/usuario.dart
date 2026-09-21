@@ -2,7 +2,7 @@ class Usuario {
   final String uid;
   final String nombre;
   final String email;
-  final String rol; // "admin" o "cliente"
+  final String rol;
 
   Usuario({
     required this.uid,

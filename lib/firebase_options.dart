@@ -58,7 +58,6 @@ class DefaultFirebaseOptions {
     iosClientId: '699457902383-m2t6pv5i7s87m1av4dun2gak4vfdfg4u.apps.googleusercontent.com',
     iosBundleId: 'com.example.farmayopinApp',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyClBWM72--zqlLzdfFr5ro6pDJKoi7nEq0',
     appId: '1:699457902383:ios:9ea3da92174cced006f3da',
@@ -77,7 +76,6 @@ class DefaultFirebaseOptions {
     authDomain: 'farmayopin-laboratorio.firebaseapp.com',
     storageBucket: 'farmayopin-laboratorio.firebasestorage.app',
   );
-
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyAVgjKlpj5tDzkjGqp0CoDEKa0lEYIXPmI',
     appId: '1:699457902383:android:0367955ac9b24ba306f3da',
